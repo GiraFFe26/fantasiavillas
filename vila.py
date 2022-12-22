@@ -18,7 +18,7 @@ def collect_data(urls):
     http = requests.Session()
     http.mount("https://", adapter)
     http.mount("http://", adapter)
-    with open('PH.csv', 'w', newline='', encoding='UTF-8') as csvfile:
+    with open('MSRU.csv', 'w', encoding='cp1251', errors='replace', newline='') as csvfile:
         spamwriter = csv.writer(csvfile, delimiter=';')
         spamwriter.writerow(["Category", "Title", "Description", "Text", "Photo", "Price"])
         for url in urls:
@@ -46,9 +46,12 @@ def collect_data(urls):
                     name = soup.find('h1', class_='single-page-title tk-lora fw-normal').text
                 except AttributeError:
                     continue
-                description = '\n'.join([i.text for i in soup.find('section', class_='content-tab clearfix tab-section visible-tab').find_all('p')]).split('Registration number')[0]
+                description = '\n'.join([i.text for i in soup.find('section', class_='content-tab clearfix tab-section'
+                                                                                     ' visible-tab').find_all('p')])
+                description = description.split('Registration number')[0]
                 if description == '':
-                    description = soup.find('section', class_='content-tab clearfix tab-section visible-tab').text.strip()
+                    description = soup.find('section',
+                                            class_='content-tab clearfix tab-section visible-tab').text.strip()
                 images = soup.find_all('img')[1:]
                 image_urls = []
                 for image in images:
@@ -58,11 +61,14 @@ def collect_data(urls):
                     url = 'https:' + url
                     image_urls.append(url)
                 params = soup.find('ul', id='specifications').find_all('li')
-                spamwriter.writerow(['PH/EN', name, params[1].text + '.' + 'Guests:'.join(params[2].text.split('Guests')), description, ';'.join(image_urls), price])
+                spamwriter.writerow(['MS/RU', name,
+                                     params[1].text + '.' + 'Guests:'.join(params[2].text.split('Guests')),
+                                     description, ';'.join(image_urls), price])
 
 
 def main():
-    collect_data(['https://fantasiavillas.com/destinations/thailand-villa-rentals/phuket-villa-rentals/'])
+    collect_data(['https://fantasiavillas.com/ru?p=destinations%2Fgreece-villa-rentals%2Fmykonos-villa-rentals',
+                  'https://fantasiavillas.com/ru?p=destinations%2Fgreece-villa-rentals%2Fsantorini-villa-rentals'])
 
 
 if __name__ == '__main__':
