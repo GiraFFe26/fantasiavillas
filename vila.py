@@ -18,14 +18,18 @@ def collect_data(urls):
     http = requests.Session()
     http.mount("https://", adapter)
     http.mount("http://", adapter)
-    with open('MSRU.csv', 'w', encoding='cp1251', errors='replace', newline='') as csvfile:
+    category = 'MS'
+    lang = 'EN'
+    sku = 10000
+    with open(f'{category}{lang}.csv', 'w', encoding='cp1251', errors='replace', newline='') as csvfile:
         spamwriter = csv.writer(csvfile, delimiter=';')
-        spamwriter.writerow(["Category", "Title", "Description", "Text", "Photo", "Price"])
+        spamwriter.writerow(["Category", "Title", "Description", "Text", "Photo", "Price", "SKU"])
+        k = 1
         for url in urls:
             r = http.get(url, headers={'user-agent': ua.random})
             soup = BeautifulSoup(r.text, 'lxml')
             items = soup.find('ul', id='villas-listing').find_all('li')
-            for k, item in enumerate(items):
+            for item in items:
                 url = 'https://fantasiavillas.com' + item.find('a').get('href')
                 price = str(item.find('span', class_='short-desc'))
                 if '€' in price or '$' in price:
@@ -61,14 +65,19 @@ def collect_data(urls):
                     url = 'https:' + url
                     image_urls.append(url)
                 params = soup.find('ul', id='specifications').find_all('li')
-                spamwriter.writerow(['MS/RU', name,
+                pos = f'{category}{k}'
+                k += 1
+                sku += 1
+                spamwriter.writerow([f'{category}/{lang}', pos,
                                      params[1].text + '.' + 'Guests:'.join(params[2].text.split('Guests')),
-                                     description, ';'.join(image_urls), price])
+                                     description.replace(name, pos), ';'.join(image_urls), price, sku])
+                with open(f'{category}{lang}.txt', 'a', encoding='UTF-8') as file:
+                    file.write(f'{name} - {pos}\n')
 
 
 def main():
-    collect_data(['https://fantasiavillas.com/ru?p=destinations%2Fgreece-villa-rentals%2Fmykonos-villa-rentals',
-                  'https://fantasiavillas.com/ru?p=destinations%2Fgreece-villa-rentals%2Fsantorini-villa-rentals'])
+    collect_data(['https://fantasiavillas.com/destinations/greece-villa-rentals/mykonos-villa-rentals/',
+                  'https://fantasiavillas.com/destinations/greece-villa-rentals/santorini-villa-rentals/'])
 
 
 if __name__ == '__main__':
